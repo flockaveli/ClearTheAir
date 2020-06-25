@@ -1,0 +1,89 @@
+* {
+    font-family: 'Lalezar', cursive;
+}
+
+body {
+    background-color: #379683;
+}
+
+h1 {
+    color: #FFF;
+    font-size: 6rem;
+    padding-bottom: 2rem;
+}
+
+h2 {
+    text-align: center;
+    color: #96cec3;
+
+}
+
+p {
+    font-size: 30;
+    color: #96cec3;
+    text-align: center;
+    
+    font-family: 'Montserrat', sans-serif;
+
+}
+
+
+.temp-list {
+    text-align: center;
+    padding-top: 2rem;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333333;
+    display: inline-block;
+}
+
+li {
+    float: left;
+    display: inline-block;
+}
+
+li a {
+    display: inline-block;
+    color: white;
+    text-align: center;
+    padding: 16px;
+    text-decoration: none;
+}
+
+li a:hover {
+    background-color: #444444;
+    color: #FFF;
+    text-decoration: none;
+}
+
+.theMap {
+margin: 0 auto;
+}
+
+#sm-buttons img {
+    padding: 1rem;
+    border: 0;
+    box-shadow: 0;
+    display: inline;
+    width: 6rem;
+}
+
+#sm-buttons {
+    text-align: center;
+}
+
+.what-is {
+    margin: 4rem;
+}
+
+.graph {
+    width: 70rem;
+    height: 40rem;
+    background-color: #fafafa;
+    margin: 0 auto;
+    margin-bottom: 2rem;
+}

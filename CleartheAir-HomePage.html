@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link href="https://fonts.googleapis.com/css?family=Lalezar|Montserrat&display=swap" rel="stylesheet">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  <!-- AWS SDK -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
+  <!-- Facebook SDK -->
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.3&appId=1292440970936511"></script>
+  <link rel="stylesheet" type="text/css" href="mystyle1.css">
+</head>
+
+<body>
+  <div id="fb-root"></div>
+  <script>
+    FB.login(function (response) {
+      if (response.authResponse) {
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+          IdentityPoolId: 'us-east-1:ba587649-1d60-4ebc-93d6-e3fad83bed90',
+          Logins: {
+            'graph.facebook.com': response.authResponse.accessToken
+          }
+        });
+        // Obtain AWS credentials
+        AWS.config.credentials.get(function () {
+          var params = {
+            IdentityPoolId: "us-east-1:ba587649-1d60-4ebc-93d6-e3fad83bed90"
+          };
+          AWS.config.region = 'us-east-1';
+          AWS.config.credentials = new AWS.CognitoIdentityCredentials(params);
+          AWS.config.credentials.get(function (err) {
+            if (err) {
+              console.log("Error: " + err);
+              return;
+            }
+            console.log("Cognito Identity Id: " + AWS.config.credentials.identityId);
+            var cognitoSyncClient = new AWS.CognitoSync();
+            cognitoSyncClient.listDatasets({
+              IdentityId: AWS.config.credentials.identityId,
+              IdentityPoolId: "us-east-1:ba587649-1d60-4ebc-93d6-e3fad83bed90"
+            }, function (err, data) {
+              if (!err) {
+                console.log(JSON.stringify(data));
+              }
+            });
+          });
+        });
+      } else {
+        console.log('There was a problem logging you in.');
+      }
+    });
+    const ddb = new AWS.DynamoDB.DocumentClient();
+
+    function getReadings() {
+      var readparams = {
+        ExpressionAttributeValues: {
+          ":v1": {
+            S: "clear"
+          }
+        },
+        KeyConditionExpression: "boxname = :v1",
+        ProjectionExpression: "timestamp",
+        TableName: "clear"
+      };
+      ddb.query(readparams, function (err, data) {
+        if (err) console.log(err, err.stack); // an error occurred
+        else document.getElementById("temp-list").innerHTML = (JSON.stringify(data, undefined, 2))
+      })
+    }
+  </script>
+  <center>
+    <h1>Clear the Air </h1>
+    <div class="fb-login-button" data-width="" data-size="large" data-button-type="continue_with"
+      data-auto-logout-link="false" data-use-continue-as="true"></div>
+  </center>
+  <div class="temp-list">
+    <!-- <ul>
+            <li><a href="#temperature"></a></li>
+            <li><a href="#co2"></a></li>
+            <li><a href="#formaldehyde"></a></li>
+            <li><a href="#humidity"></a></li>
+            <li><a href="#TVOC"></a></li>
+            <li><a href="#altitude"></a></li>
+            <li><a href="#"></a></li>
+            <li><a href="#humidity"></a></li>
+        </ul>-->
+  </div>
+  <div class="theMap" id="googleMap" style="width:100%; height:50rem;"></div>
+  <!--    
+    <div id="graph-1" class="graph"></div>
+    <div id="graph-2" class="graph"></div>
+    <div id="graph-3" class="graph"></div>
+    <div id="graph-4" class="graph"></div>
+    <div id="graph-5" class="graph"></div>
+    <div id="graph-6" class="graph"></div>
+    <div id="graph-7" class="graph"></div>
+     -->
+  <script>
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: '1292440970936511',
+        cookie: true,
+        xfbml: true,
+        version: 'v3.3'
+      });
+      FB.AppEvents.logPageView();
+    };
+    (function (d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) {
+        return;
+      }
+      js = d.createElement(s);
+      js.id = id;
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    function checkLoginState() {
+      FB.getLoginStatus(function (response) {
+        statusChangeCallback(response);
+        if (response.status === 'connected') {
+          console.log(response.authResponse.accessToken);
+        }
+      });
+    }
+  </script>
+  <script>
+    var infoWindow;
+    var Temperature = '0';
+    var html =
+      '<div id="pButtons"> <p><button onclick={loadContent()}>Air Content</button><button onclick={loadQuality()>Air Quality</button></p></div>'
+
+    function myMap() {
+      var mapProp = {
+        center: new google.maps.LatLng(-36.86667, 174.76667),
+        zoom: 11,
+      };
+      var map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+      var myCenter = {
+        lat: -36.8484,
+        lng: 174.7622
+      };
+      var marker = new google.maps.Marker({
+        position: myCenter
+      });
+      marker.setMap(map);
+      infowindow = new google.maps.InfoWindow({});
+      google.maps.event.addListener(marker, 'click', function () {
+        map.setZoom(14);
+        map.setCenter(marker.getPosition());
+        infowindow.setContent('Temperature = ' + Temperature + html);
+        infowindow.open(map, marker);
+      });
+    }
+
+    function loadContent() {
+      infowindow.setContent('<p>Co2:<p><p>NaCl</p>')
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAfl7ElQdu2Lnx67UnZ899NSuC4TfH4yKI&callback=myMap">
+  </script>
+  <div class="what-is">
+    <h2>What is Clear the Air?</h2>
+    <p>Clear the air is a web application using cloud technology to show the overall air quality and conditions in the
+      region of Auckland.</p>
+    <p> Measurements are taken from sensors attached to a raspberry pi running a python script and uploaded via AWS.
+      This application is a conceptual front-end UI to be improved on increasing the number of boxes.</p>
+  </div>
+</body>
+
+</html>
